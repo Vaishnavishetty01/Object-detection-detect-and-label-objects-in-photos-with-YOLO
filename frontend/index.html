@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="VisionLens — explore YOLO object detections in images and webcam frames." />
+    <title>VisionLens · Object Detection Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="VisionLens home">
+          <span class="brand-mark" aria-hidden="true">⌁</span>
+          <span>Vision<span class="brand-accent">Lens</span></span>
+        </a>
+        <div class="topbar-actions">
+          <span class="model-pill"><span class="status-dot"></span> YOLO ready</span>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to dark theme" title="Toggle theme">☾</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <section class="hero" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow">COMPUTER VISION STUDIO</p>
+            <h1 id="page-title">See what’s in your <span>world.</span></h1>
+            <p class="hero-copy">Upload a photo or open your camera to detect, inspect, and export objects with YOLO.</p>
+          </div>
+          <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span></div>
+        </section>
+
+        <section class="control-card glass-card" aria-labelledby="input-heading">
+          <div class="section-heading compact-heading">
+            <div>
+              <p class="eyebrow">INPUT SOURCE</p>
+              <h2 id="input-heading">Choose a frame</h2>
+            </div>
+            <div class="mode-switch" role="tablist" aria-label="Input mode">
+              <button id="upload-mode" class="mode-button active" role="tab" aria-selected="true" type="button">▧ Upload</button>
+              <button id="webcam-mode" class="mode-button" role="tab" aria-selected="false" type="button">◉ Webcam</button>
+            </div>
+          </div>
+
+          <div id="upload-panel" class="input-panel">
+            <label id="drop-zone" class="drop-zone" for="file-input" tabindex="0">
+              <span class="upload-icon" aria-hidden="true">↑</span>
+              <span class="drop-title">Drop an image here</span>
+              <span class="drop-subtitle">or <span class="link-text">browse your files</span></span>
+              <span class="file-hint">PNG, JPG, WebP or GIF · max 10 MB</span>
+              <input id="file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+            </label>
+          </div>
+
+          <div id="webcam-panel" class="input-panel hidden">
+            <div class="webcam-callout"><span class="camera-glyph" aria-hidden="true">◉</span><div><strong>Live camera detection</strong><p>Allow camera access, then point it at an object.</p></div></div>
+            <div class="webcam-actions">
+              <button id="start-camera" class="primary-button" type="button">Start camera</button>
+              <button id="stop-camera" class="secondary-button" type="button" disabled>Stop camera</button>
+            </div>
+          </div>
+
+          <div class="threshold-controls" aria-label="Detection thresholds">
+            <div class="slider-control">
+              <label for="confidence-slider"><span>Confidence threshold</span><output id="confidence-value" for="confidence-slider">25%</output></label>
+              <input id="confidence-slider" type="range" min="5" max="95" value="25" step="1" />
+              <div class="range-labels"><span>More objects</span><span>More certain</span></div>
+            </div>
+            <div class="slider-control">
+              <label for="iou-slider"><span>IoU threshold</span><output id="iou-value" for="iou-slider">45%</output></label>
+              <input id="iou-slider" type="range" min="5" max="95" value="45" step="1" />
+              <div class="range-labels"><span>More boxes</span><span>Less overlap</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-grid" aria-label="Detection workspace">
+          <div class="stage-card glass-card">
+            <div class="section-heading stage-heading">
+              <div><p class="eyebrow">LIVE CANVAS</p><h2>Detection view</h2></div>
+              <div class="stage-meta"><span id="image-dimensions">No image loaded</span><span id="detecting-indicator" class="detecting-indicator hidden"><i></i> Detecting…</span></div>
+            </div>
+            <div id="stage" class="stage empty-stage">
+              <div id="stage-empty" class="stage-empty"><span class="empty-icon" aria-hidden="true">＋</span><strong>Your image will appear here</strong><span>Results are drawn on an interactive canvas.</span></div>
+              <video id="webcam-video" autoplay playsinline muted aria-label="Webcam preview"></video>
+              <canvas id="display-canvas" tabindex="0" aria-label="Detection canvas. Use arrow keys to select detections."></canvas>
+              <div id="canvas-tooltip" class="canvas-tooltip" role="tooltip"></div>
+              <div id="stage-skeleton" class="stage-skeleton hidden" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+            <div class="stage-actions">
+              <button id="download-image" class="secondary-button" type="button" disabled>↓ Download PNG</button>
+              <div class="export-actions"><button id="export-json" class="text-button" type="button" disabled>Export JSON</button><button id="export-csv" class="text-button" type="button" disabled>Export CSV</button></div>
+            </div>
+          </div>
+
+          <aside class="details-card glass-card" aria-labelledby="details-heading">
+            <div class="section-heading"><div><p class="eyebrow">INSPECTOR</p><h2 id="details-heading">Selected object</h2></div><span id="selected-number" class="number-badge">—</span></div>
+            <div id="details-empty" class="details-empty"><span class="target-icon" aria-hidden="true">◎</span><p>Click a bounding box to inspect it.</p><small>Hover for a quick preview</small></div>
+            <div id="details-content" class="details-content hidden">
+              <div class="selected-label"><span id="selected-color" class="color-dot"></span><span id="selected-label">Object</span></div>
+              <div class="confidence-display"><span>Confidence</span><strong id="selected-confidence">—</strong></div>
+              <div class="confidence-bar"><span id="selected-confidence-bar"></span></div>
+              <dl class="coordinates"><div><dt>X1</dt><dd id="selected-x1">—</dd></div><div><dt>Y1</dt><dd id="selected-y1">—</dd></div><div><dt>X2</dt><dd id="selected-x2">—</dd></div><div><dt>Y2</dt><dd id="selected-y2">—</dd></div></dl>
+              <p class="inspector-hint">Use <kbd>←</kbd> <kbd>→</kbd> to move between detections.</p>
+            </div>
+          </aside>
+        </section>
+
+        <section class="stats-grid" aria-label="Detection statistics">
+          <article class="stat-card glass-card"><span class="stat-icon purple">✦</span><div><span class="stat-label">Objects found</span><strong id="total-objects">—</strong></div></article>
+          <article class="stat-card glass-card"><span class="stat-icon orange">◷</span><div><span class="stat-label">Inference time</span><strong id="inference-time">—</strong></div></article>
+          <article class="chart-card glass-card"><div class="chart-heading"><div><span class="stat-label">Class distribution</span><strong id="class-count-label">Waiting for results</strong></div><span class="chart-legend"><i></i> Detected</span></div><canvas id="class-chart" aria-label="Bar chart of detected class counts"></canvas></article>
+        </section>
+
+        <section class="results-card glass-card" aria-labelledby="results-heading">
+          <div class="section-heading results-heading"><div><p class="eyebrow">DETECTION LOG</p><h2 id="results-heading">All detections <span id="result-count" class="count-badge">0</span></h2></div><div id="class-filters" class="class-filters" aria-label="Filter classes"></div></div>
+          <div class="table-wrap"><table><thead><tr><th><button class="sort-button" data-sort="label" type="button">Label <span>↕</span></button></th><th><button class="sort-button" data-sort="confidence" type="button">Confidence <span>↕</span></button></th><th><button class="sort-button" data-sort="x" type="button">Coordinates <span>↕</span></button></th><th><span class="sr-only">Select</span></th></tr></thead><tbody id="results-body"><tr class="empty-row"><td colspan="4">Run detection to see objects here.</td></tr></tbody></table></div>
+        </section>
+      </main>
+      <footer><span>VisionLens</span><span>YOLO-powered visual intelligence</span></footer>
+    </div>
+    <div id="toast-region" class="toast-region" role="status" aria-live="polite"></div>
+    <script src="/js/app.js" defer></script>
+  </body>
+</html>
+
